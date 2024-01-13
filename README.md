@@ -1,3 +1,5 @@
-123
-- 234
-- 345
+This is personal repo, used for devops competence developent
+- Vagrant
+- Ansible
+- Docker
+- ...
