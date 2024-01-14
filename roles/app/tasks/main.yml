@@ -1,15 +1,31 @@
+- name: "Create app user"
+  ansible.builtin.user:
+    name: appuser
+    shell: /bin/bash
+
 - name: "Install dev packages"
   ansible.builtin.yum:
-    name: "{{ packages }}"
+    name: "{{ item }}"
     state: present
     update_cache: true
+  with_items: 
+    - ruby
+    - ruby-dev
+    - make
+#    - build-base
+#    - libxml2-dev
+
+- name: install gem with proper $PATH
+  gem:
+    name: bundler
+    user_install: no
 
 - name: "Install app files"
   ansible.builtin.copy:
     src: files/app/
     dest: /var/www/
-    owner: vagrant
-    group: vagrant
+    owner: appuser
+    group: appuser
     mode: 0644
 
 - name: "Install app service"
