@@ -1,0 +1,39 @@
+---
+- name: 'Postgres install and configuration'
+  become: true
+  become_method: sudo
+  hosts: postgres_srv
+  vars:
+    postgres_users_no_log: false
+    postgresql_users:
+      - name: postgres
+        password: password
+    postgresql_packages:
+      - postgresql
+      - postgresql-server
+      - postgresql-contrib
+      - postgresql-libs
+    postgresql_version: "9.2"
+    postgresql_data_dir: "/var/lib/pgsql/data"
+    postgresql_bin_path: "/usr/bin"
+    postgresql_config_path: "/var/lib/pgsql/data"
+    postgresql_daemon: postgresql
+  roles:
+  - postgres
+
+- name: 'NGiNX install and configuration'
+  become: true
+  become_method: sudo
+  hosts: app_srv
+  roles:
+  - nginx
+
+- name: "Install dev packages"
+  hosts: app_srv
+  become: true
+  vars:
+    packages:
+      - build-base
+      - libxml2-dev
+  roles:
+  - app

@@ -1,0 +1,27 @@
+- name: "Install dev packages"
+  ansible.builtin.yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+
+- name: "Install app files"
+  ansible.builtin.copy:
+    src: files/app/
+    dest: /var/www/
+    owner: vagrant
+    group: vagrant
+    mode: 0644
+
+- name: "Install app service"
+  ansible.builtin.copy:
+    src: files/app.service
+    dest: /etc/systemd/system/
+    owner: vagrant
+    group: vagrant
+    mode: 0644
+
+- name: "Start app service"
+  ansible.builtin.service:
+    name: "ruby-app"
+    state: started
+    enabled: yes

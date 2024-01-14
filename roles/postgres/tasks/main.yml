@@ -1,0 +1,65 @@
+- name: Ensure PostgreSQL packages are installed.
+  yum:
+    name: "{{ postgresql_packages }}"
+    state: present
+    exclude: python-unversioned-command
+
+- name: Ensure PostgreSQL Python libraries are installed.
+  yum:
+    name: "python-psycopg2"
+    state: present
+
+- name: Check if PostgreSQL database is initialized.
+  stat:
+    path: "{{ postgresql_data_dir }}/PG_VERSION"
+  register: pgdata_dir_version
+
+- name: Ensure PostgreSQL database is initialized.
+  command: "{{ postgresql_bin_path }}/initdb -D {{ postgresql_data_dir }}"
+  when: not pgdata_dir_version.stat.exists
+  become: true
+  become_user: "postgres"
+  vars:
+    ansible_ssh_pipelining: true
+
+- name: Start PostgreSQL server
+  systemd:
+    name: "{{ postgresql_daemon }}"
+    state: started
+
+- name: "Update postgresql.conf"
+  lineinfile:
+    path: "{{ postgresql_config_path }}/postgresql.conf"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+  - regexp: "#listen_addresses = 'localhost'"
+    line: "listen_addresses = '*'"
+
+- name: "Update pg_hba.conf"
+  blockinfile:
+    path: "{{ postgresql_config_path }}/pg_hba.conf"
+    insertafter: "#host replication postgres ::1/128 ident"
+    block: | 
+      host all all 0.0.0.0/0 md5
+
+- name: "Create app user"
+  postgresql_user:
+    name: "dbuser"
+    role_attr_flags: "SUPERUSER,LOGIN"
+    password: "dbuserpass123#"
+  become: true
+  become_user: postgres
+  become_method: sudo
+
+- name: Restart PostgreSQL server
+  ansible.builtin.service:
+    name: "{{ postgresql_daemon }}"
+    state: restarted
+    enabled: yes
+
+- name: Healthcheck
+  postgresql_query:
+    query: SELECT version()
+  become: true
+  become_user: postgres

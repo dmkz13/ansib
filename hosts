@@ -1,0 +1,10 @@
+all:
+  children:
+    app:
+      hosts:
+        app_srv:
+          ansible_host: 192.168.56.40
+    postgres:
+      hosts:
+        postgres_srv:
+          ansible_host: 192.168.56.41
