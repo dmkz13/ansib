@@ -31,9 +31,5 @@
 - name: "Install dev packages"
   hosts: app_srv
   become: true
-  vars:
-    packages:
-      - build-base
-      - libxml2-dev
   roles:
   - app
